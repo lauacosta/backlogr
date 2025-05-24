@@ -57,7 +57,6 @@ cd backlogr
 cargo install --path .
 ```
 
-
 ---
 
 ## 📋 Prerequisites
