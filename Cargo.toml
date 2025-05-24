@@ -1,0 +1,24 @@
+[package]
+name = "backlogr"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Acosta Quintana Lautaro", "<acostaquintanalautaro@gmail.com>"]
+description = "CLI for interacting with the Taiga REST API"
+readme = "README.md"
+repository = "https://github.com/lauacosta/backlogr"
+license = "MIT"
+keywords = ["ci", "kanban", "taiga"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+clap = { version = "4.5.38", features = ["env", "cargo","derive"] }
+color-eyre = "0.6.4"
+eyre = "0.6.12"
+minreq = { version = "2.13.4", features = ["https-rustls","json-using-serde", "urlencoding" ]}
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+
+[lib]
+path = "./src/lib.rs"
