@@ -199,52 +199,10 @@ backlogr wip 42
 
 # Mark as complete after successful deployment
 backlogr done 42
+
 ```
 
-### Exit Codes
-- `0`: Success
-- `1`: General error (authentication, network, etc.)
-- `2`: Story not found
-- `3`: Invalid project or permissions
-
----
-
-## 🔧 Error Handling Examples
-
-### Authentication Failure
-```sh
-backlogr list
-# ❌ Authentication failed: HTTP 401: {"detail": "No active account found with the given credentials", "code": "invalid_credentials"}
-# 💡 Troubleshooting authentication:
-#    • Set environment variables:
-#      export USERNAME=your_taiga_username
-#      export PASSWORD=your_taiga_password
-#    • Verify credentials by logging into Taiga web interface
-#    • Check if your account is active and not locked
-```
-
-### Story Not Found
-```sh
-backlogr wip 50
-# 🔍 Looking up user story with ref #50 in project...
-# ❌ User story not found: User story with ref #50 not found.
-# 💡 Story 'User story with ref #50 not found.' not found. Try:
-#   • backlogr list           # See all available stories
-#   • backlogr create         # Create a new story
-#   • Check for typos in the story title
-#   • Ensure you're in the correct project
-```
-
-### Network Issues
-```sh
-backlogr list
-# ❌ Error: Failed to connect to Taiga instance. Please check your network connection.
-# Exit code: 1
-```
-
----
-
-## ## 🤖 CI Pipeline Usage
+### Automated Commit-Based Workflow
 
 Here's a complete CI script that automatically updates Taiga stories based on commit messages:
 
@@ -339,6 +297,50 @@ fi
 ```
 
 ---
+
+### Exit Codes
+- `0`: Success
+- `1`: General error (authentication, network, etc.)
+- `2`: Story not found
+- `3`: Invalid project or permissions
+
+---
+
+## 🔧 Error Handling Examples
+
+### Authentication Failure
+```sh
+backlogr list
+# ❌ Authentication failed: HTTP 401: {"detail": "No active account found with the given credentials", "code": "invalid_credentials"}
+# 💡 Troubleshooting authentication:
+#    • Set environment variables:
+#      export USERNAME=your_taiga_username
+#      export PASSWORD=your_taiga_password
+#    • Verify credentials by logging into Taiga web interface
+#    • Check if your account is active and not locked
+```
+
+### Story Not Found
+```sh
+backlogr wip 50
+# 🔍 Looking up user story with ref #50 in project...
+# ❌ User story not found: User story with ref #50 not found.
+# 💡 Story 'User story with ref #50 not found.' not found. Try:
+#   • backlogr list           # See all available stories
+#   • backlogr create         # Create a new story
+#   • Check for typos in the story title
+#   • Ensure you're in the correct project
+```
+
+### Network Issues
+```sh
+backlogr list
+# ❌ Error: Failed to connect to Taiga instance. Please check your network connection.
+# Exit code: 1
+```
+
+---
+
 
 ## 🏗️ Supported Taiga Versions
 
