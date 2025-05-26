@@ -59,11 +59,19 @@ fn main() -> Result<()> {
                 story_id.bold().bright_green(),
             );
         }
-        Command::List => {
-            let stories = taiga_api.list_stories(project_id).or_exit();
+        Command::List { format } => {
+            let stories = taiga_api.list_all_stories(project_id).or_exit();
 
-            let user_stories = UserStories::new(stories);
-            eprintln!("{user_stories}");
+            match format {
+                backlogr::cli::Format::Pretty => {
+                    let user_stories = UserStories::new(stories);
+
+                    eprintln!("{user_stories}");
+                }
+                backlogr::cli::Format::Json => {
+                    println!("{}", serde_json::to_string_pretty(&stories)?);
+                }
+            }
         }
     }
     Ok(())

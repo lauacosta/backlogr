@@ -168,13 +168,39 @@ impl TaigaAPI {
     ///
     /// # Errors
     /// Returns `TaigaAPIError::ApiError` if the request fails or the API response is invalid.
-    pub fn list_stories(&self, project_id: usize) -> Result<Vec<UserStory>, TaigaAPIError> {
+    pub fn list_all_stories(&self, project_id: usize) -> Result<Vec<UserStory>, TaigaAPIError> {
+        let mut all_stories = Vec::new();
+        let mut page = 1;
+        let page_size = 100;
+
+        loop {
+            let (stories, has_more) = self.list_stories_page(project_id, page, page_size)?;
+            all_stories.extend(stories);
+
+            if !has_more {
+                break;
+            }
+
+            page += 1;
+        }
+
+        Ok(all_stories)
+    }
+
+    fn list_stories_page(
+        &self,
+        project_id: usize,
+        page: usize,
+        page_size: usize,
+    ) -> Result<(Vec<UserStory>, bool), TaigaAPIError> {
         let auth_token = self.auth_token.clone();
         let api_url = self.api_url.clone();
 
-        let response = minreq::get(format!("{api_url}/userstories?project={project_id}"))
-            .with_header("Authorization", format!("Bearer {auth_token}"))
-            .send()?;
+        let response = minreq::get(format!(
+            "{api_url}/userstories?project={project_id}&page={page}&page_size={page_size}"
+        ))
+        .with_header("Authorization", format!("Bearer {auth_token}"))
+        .send()?;
 
         if response.status_code != 200 {
             let body = response.as_str()?;
@@ -184,7 +210,29 @@ impl TaigaAPI {
             )));
         }
 
-        Ok(response.json::<Vec<UserStory>>()?)
+        let stories: Vec<UserStory> = response.json()?;
+
+        let current_page_count = response
+            .headers
+            .get("x-pagination-count")
+            .and_then(|s| s.parse::<usize>().ok())
+            .unwrap_or(0);
+
+        let page_size_header = response
+            .headers
+            .get("x-paginated-by")
+            .and_then(|s| s.parse::<usize>().ok())
+            .unwrap_or(page_size);
+
+        let is_paginated = response
+            .headers
+            .get("x-paginated")
+            .map(|s| s == "true")
+            .unwrap_or(false);
+
+        let has_more = is_paginated && current_page_count == page_size_header;
+
+        Ok((stories, has_more))
     }
 
     /// Retrieves the project ID for a given project name where the current user is a member.
@@ -296,7 +344,7 @@ impl TaigaAPI {
     pub fn get_story_id(&self, project_id: usize, story_id: usize) -> Result<usize, TaigaAPIError> {
         eprintln!("🔍 Looking up user story with ref #{story_id} in project...");
 
-        let user_story_list = self.list_stories(project_id)?;
+        let user_story_list = self.list_all_stories(project_id)?;
 
         user_story_list
             .iter()
