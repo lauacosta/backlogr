@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, command, crate_version};
+use clap::{Parser, Subcommand, ValueEnum, command, crate_version};
 
 use crate::integrations::taiga::Status;
 
@@ -35,7 +35,9 @@ pub struct Cli {
 impl Cli {
     #[must_use]
     pub fn command(&self) -> Command {
-        self.command.clone().unwrap_or(Command::List)
+        self.command.clone().unwrap_or(Command::List {
+            format: Format::Pretty,
+        })
     }
 }
 
@@ -57,5 +59,14 @@ pub enum Command {
     /// Deletes a User Story
     Delete { story_id: usize },
     /// List User stories
-    List,
+    List {
+        #[arg(short, long = "format", value_enum, default_value_t = Format::Pretty)]
+        format: Format,
+    },
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum Format {
+    Pretty,
+    Json,
 }
