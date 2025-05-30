@@ -105,7 +105,7 @@ backlogr [COMMAND]
                         ▐▌ ▐▌
                          ▝▀▜▌
                         ▐▙▄▞▘
-    @lauacosta/backlogr 1.0.0
+    @lauacosta/backlogr 0.5.0
 
 Usage: backlogr --username <USERNAME> --password <PASSWORD> --project_name <PROJECT_NAME> [COMMAND]
 
