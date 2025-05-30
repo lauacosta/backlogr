@@ -42,7 +42,19 @@
 
 ## 📦 Installation
 
-### From Releases (Recommended)
+### From binary
+```sh
+cargo binstall backlogr
+backlogr --version
+```
+
+### From crates.io
+```sh
+cargo install backlogr
+backlogr --version
+```
+
+### From Releases
 ```sh
 # Download the latest release for your platform
 curl -L https://github.com/lauacosta/backlogr/releases/latest/download/backlogr-linux-x86_64.tar.gz | tar xz
@@ -51,10 +63,11 @@ sudo mv backlogr /usr/local/bin/
 
 ### From Source
 ```sh
-# Requires Rust 1.85+
+# Requires Rust 1.85.1+
 git clone https://github.com/lauacosta/backlogr.git
 cd backlogr
 cargo install --path .
+backlogr --version
 ```
 
 ---
@@ -64,7 +77,7 @@ cargo install --path .
 - **Taiga Instance**: Access to a Taiga instance (tested with Taiga 6.x)
 - **Account**: Valid Taiga username and password
 - **Project**: Existing project in Taiga with User Stories enabled
-- **Rust**: 1.85+ (if building from source)
+- **Rust**: 1.85.1+ (if building from source)
 
 ---
 
