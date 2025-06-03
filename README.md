@@ -57,8 +57,8 @@ backlogr --version
 ### From Releases
 ```sh
 # Download the latest release for your platform
-curl -L https://github.com/lauacosta/backlogr/releases/latest/download/backlogr-linux-x86_64.tar.gz | tar xz
-sudo mv backlogr /usr/local/bin/
+curl -L https://github.com/lauacosta/backlogr/releases/download/v0.5.0/backlogr-v0.5.0-x86_64-unknown-linux-musl.tar.gz | tar xz
+sudo mv backlogr-v0.5.0-x86_64-unknown-linux-musl/backlogr /usr/local/bin/
 ```
 
 ### From Source

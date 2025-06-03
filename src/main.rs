@@ -1,7 +1,7 @@
 use backlogr::{
-    ExitOnError,
     cli::{Cli, Command},
     integrations::taiga::{Status, TaigaAPI, UserStories},
+    ExitOnError,
 };
 use clap::Parser;
 use color_eyre::owo_colors::OwoColorize;

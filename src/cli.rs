@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum, command, crate_version};
+use clap::{command, crate_version, Parser, Subcommand, ValueEnum};
 
 use crate::integrations::taiga::Status;
 
