@@ -1,15 +1,22 @@
-# Backlogr
-**A work-in-progress CLI for interacting with the Taiga REST API.**
+<!-- markdownlint-disable no-inline-html first-line-heading no-emphasis-as-heading -->
 
-> ⚠️ **Personal Tool Warning**  
-> `backlogr` is tailored for personal CI workflows and only implements what *I* need.  
-> It is not a general-purpose client and may never be. Current limitations include:
-> - Only supports User Stories (no tasks, issues, or epics)
-> - Basic status transitions only (New → WIP → Done)
-> - No bulk operations or advanced filtering
-> - Limited error handling and validation
+<div align="center">
 
----
+# `📝 backlogr`
+
+**A CLI for interacting with the Taiga REST API.**
+
+[![Crates.io](https://img.shields.io/crates/v/backlogr.svg)](https://crates.io/crates/backlogr)
+
+</div>
+
+To run on CI as a GitHub Action, see [backlogr-action](https://github.com/lauacosta/backlogr-action).
+
+_`backlogr` is tailored for personal CI workflows and only implements what **I** need. It is not a general-purpose client and may never be. Current limitations include_:
+ - Only supports User Stories (no tasks, issues, or epics)
+ - Basic status transitions only (New → WIP → Done)
+ - No bulk operations or advanced filtering
+ - Limited error handling and validation
 
 ## 🚀 Quick Start
 
