@@ -57,8 +57,8 @@ backlogr --version
 ### From Releases
 ```sh
 # Download the latest release for your platform
-curl -L https://github.com/lauacosta/backlogr/releases/download/v0.5.0/backlogr-v0.5.0-x86_64-unknown-linux-musl.tar.gz | tar xz
-sudo mv backlogr-v0.5.0-x86_64-unknown-linux-musl/backlogr /usr/local/bin/
+curl -L https://github.com/lauacosta/backlogr/releases/download/v0.0.1/backlogr-v0.0.1-x86_64-unknown-linux-musl.tar.gz | tar xz
+sudo mv backlogr-v0.0.1-x86_64-unknown-linux-musl/backlogr /usr/local/bin/
 ```
 
 ### From Source
@@ -118,7 +118,7 @@ backlogr [COMMAND]
                         ▐▌ ▐▌
                          ▝▀▜▌
                         ▐▙▄▞▘
-    @lauacosta/backlogr 0.5.0
+    @lauacosta/backlogr 0.0.1
 
 Usage: backlogr --username <USERNAME> --password <PASSWORD> --project_name <PROJECT_NAME> [COMMAND]
 
