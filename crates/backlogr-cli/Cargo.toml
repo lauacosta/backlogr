@@ -1,0 +1,17 @@
+[package]
+name = "backlogr-cli"
+edition = "2024"
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+minreq.workspace = true
+facet.workspace = true
+eyre.workspace = true
+color-eyre.workspace = true
+facet-json.workspace = true
+
+backlogr-taiga = {path = "../backlogr-taiga/"}
+facet-args = "0.19.14"
+facet-pretty = "0.23.19"
+clap = { version = "4.5.40", features = ["env", "derive", "cargo"] }

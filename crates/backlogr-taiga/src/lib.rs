@@ -1,30 +1,47 @@
-use clap::ValueEnum;
 use core::fmt;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use clap::ValueEnum;
 use color_eyre::owo_colors::OwoColorize;
 use eyre::Result;
-use serde_json::json;
-
-use crate::ExitOnError;
+use facet::Facet;
 
 pub const TAIGA_API_URL: &str = "https://api.taiga.io/api/v1";
 
-#[derive(thiserror::Error, Debug)]
 pub enum TaigaAPIError {
-    #[error("Authentication failed: {0}")]
     Authentication(String),
-    #[error("User story not found: {0}")]
     StoryNotFound(String),
-    #[error("Project not found: {0}")]
     ProjectNotFound(String),
-    #[error("API error: {0}")]
     ApiError(String),
-    #[error("Network error: {0}")]
-    InternalError(#[from] minreq::Error),
-    #[error("Failed to parse response: {0}")]
-    DeserializationError(#[from] serde_json::Error),
+    InternalError(minreq::Error),
+    DeserializationError(String),
+}
+
+impl fmt::Display for TaigaAPIError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaigaAPIError::Authentication(msg) => write!(f, "Authentication failed: {}", msg),
+            TaigaAPIError::StoryNotFound(msg) => write!(f, "User story not found: {}", msg),
+            TaigaAPIError::ProjectNotFound(msg) => write!(f, "Project not found: {}", msg),
+            TaigaAPIError::ApiError(msg) => write!(f, "API error: {}", msg),
+            TaigaAPIError::InternalError(err) => write!(f, "Network error: {}", err),
+            TaigaAPIError::DeserializationError(err) => {
+                write!(f, "Failed to parse response: {}", err)
+            }
+        }
+    }
+}
+
+impl From<facet_json::DeserErrorKind<'_>> for TaigaAPIError {
+    fn from(err: facet_json::DeserErrorKind) -> Self {
+        TaigaAPIError::DeserializationError(format!("{:?}", err))
+    }
+}
+
+impl From<minreq::Error> for TaigaAPIError {
+    fn from(err: minreq::Error) -> Self {
+        TaigaAPIError::InternalError(err)
+    }
 }
 
 impl TaigaAPIError {
@@ -134,15 +151,25 @@ impl TaigaAPI {
     /// or if there is a problem communicating with the API.
     pub fn authenticate(username: &str, password: &str) -> Result<Self, TaigaAPIError> {
         eprintln!("🔐 Authenticating with Taiga API...");
-        let payload = json!({
-            "type": "normal",
-            "username" : username,
-            "password" : password
-        });
+        #[derive(Facet)]
+        struct AuthPayload<'a> {
+            #[facet(rename = "type")]
+            user_type: &'a str,
+            username: &'a str,
+            password: &'a str,
+        }
+
+        let payload = AuthPayload {
+            user_type: "Normal",
+            username,
+            password,
+        };
+
+        let payload_str = facet_json::to_string(&payload);
 
         let response = minreq::post(format!("{TAIGA_API_URL}/auth"))
             .with_header("Content-Type", "application/json")
-            .with_json(&payload)?
+            .with_body(payload_str)
             .send()?;
 
         if response.status_code != 200 {
@@ -153,7 +180,10 @@ impl TaigaAPI {
             )));
         }
 
-        let user_auth_detail: UserAuthenticationDetail = response.json()?;
+        let response_txt = response.as_str()?;
+        dbg!("{:?}", response_txt);
+        let user_auth_detail: UserAuthenticationDetail =
+            facet_json::from_str(response_txt).unwrap();
         let auth_token = user_auth_detail.auth_token;
 
         Ok(Self {
@@ -210,8 +240,8 @@ impl TaigaAPI {
             )));
         }
 
-        let stories: Vec<UserStory> = response.json()?;
-
+        let response_str = response.as_str()?;
+        let stories: Vec<UserStory> = facet_json::from_str(response_str).unwrap();
         let current_page_count = response
             .headers
             .get("x-pagination-count")
@@ -253,7 +283,10 @@ impl TaigaAPI {
                     response.status_code, body
                 )));
             }
-            let user_detail: UserDetail = response.json()?;
+
+            let response_str = response.as_str()?;
+            let user_detail: UserDetail = facet_json::from_str(response_str).unwrap();
+
             user_detail.id
         };
 
@@ -272,7 +305,8 @@ impl TaigaAPI {
                 )));
             }
 
-            let projects_entry: Vec<ProjectListEntry> = response.json()?;
+            let response_str = response.as_str()?;
+            let projects_entry: Vec<ProjectListEntry> = facet_json::from_str(response_str).unwrap();
 
             projects_entry
                 .iter()
@@ -309,19 +343,30 @@ impl TaigaAPI {
 
         let status_id = self.get_status_id(project_id, status)?;
 
-        let payload = json!({
-            "project": project_id,
-            "subject": subject,
-            "description": description,
-            "status": status_id
-        });
+        #[derive(Facet)]
+        struct StoryPayload<'a> {
+            project_id: usize,
+            subject: &'a str,
+            description: &'a str,
+            #[facet(rename = "status")]
+            status_id: usize,
+        }
+
+        let payload = StoryPayload {
+            project_id,
+            subject,
+            description,
+            status_id,
+        };
+
+        let payload_str = facet_json::to_string(&payload);
 
         let response = minreq::post(format!("{TAIGA_API_URL}/userstories"))
             .with_headers([
                 ("Authorization", format!("Bearer {auth_token}")),
                 ("Content-Type", "application/json".to_owned()),
             ])
-            .with_json(&payload)?
+            .with_body(payload_str)
             .send()?;
 
         if response.status_code != 201 {
@@ -332,7 +377,8 @@ impl TaigaAPI {
             )));
         }
 
-        let story_detail: UserStoryDetail = response.json()?;
+        let response_txt = response.as_str()?;
+        let story_detail: UserStoryDetail = facet_json::from_str(response_txt).unwrap();
 
         Ok(story_detail.reference)
     }
@@ -387,17 +433,25 @@ impl TaigaAPI {
 
         eprintln!("🔄 Updating user story status to '{status}'...");
 
-        let payload = json!({
-            "status": status_id,
-            "version": user_story_current_version
-        });
+        #[derive(Facet)]
+        struct StatusPayload {
+            status: usize,
+            version: usize,
+        }
+
+        let payload = StatusPayload {
+            status: status_id,
+            version: user_story_current_version,
+        };
+
+        let payload_str = facet_json::to_string(&payload);
 
         let response = minreq::patch(format!("{api_url}/userstories/{user_story_id}"))
             .with_headers([
                 ("Authorization", format!("Bearer {auth_token}")),
                 ("Content-Type", "application/json".to_owned()),
             ])
-            .with_json(&payload)?
+            .with_body(payload_str)
             .send()?;
 
         if response.status_code != 200 {
@@ -451,7 +505,8 @@ impl TaigaAPI {
             .with_header("Authorization", format!("Bearer {auth_token}"))
             .send()?;
 
-        let user_story_detail: UserStoryDetail = response.json()?;
+        let response_str = response.as_str()?;
+        let user_story_detail: UserStoryDetail = facet_json::from_str(response_str).unwrap();
 
         Ok(user_story_detail.version)
     }
@@ -482,8 +537,9 @@ impl TaigaAPI {
             )));
         }
 
-        let statuses_list: Vec<UserStoryStatusDetail> = response.json()?;
+        let response_str = response.as_str()?;
 
+        let statuses_list: Vec<UserStoryStatusDetail> = facet_json::from_str(response_str).unwrap();
         statuses_list
             .iter()
             .find(|v| v.name == status)
@@ -494,7 +550,8 @@ impl TaigaAPI {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, ValueEnum)]
+#[repr(u8)]
+#[derive(ValueEnum, Debug, Clone, Facet)]
 pub enum Status {
     Done,
     Wip,
@@ -523,18 +580,18 @@ impl std::fmt::Display for Status {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 /// <https://docs.taiga.io/api.html#object-userstory-status-detail>
 struct UserStoryStatusDetail {
     id: usize,
     name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 /// <https://docs.taiga.io/api.html#object-userstory-detail-list>
 pub struct UserStory {
     id: usize,
-    #[serde(rename = "ref")]
+    #[facet(rename = "ref")]
     reference: usize,
     subject: String,
     status: usize,
@@ -542,7 +599,7 @@ pub struct UserStory {
     status_extra_info: StatusInfo,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 struct StatusInfo {
     color: String,
     is_closed: bool,
@@ -641,16 +698,16 @@ impl fmt::Display for UserStories {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 /// <https://docs.taiga.io/api.html#object-userstory-detail-get>
 struct UserStoryDetail {
     id: usize,
-    #[serde(rename = "ref")]
+    #[facet(rename = "ref")]
     reference: usize,
     version: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 /// <https://docs.taiga.io/api.html#object-userstory-status-detail>
 struct UserAuthenticationDetail {
     auth_token: String,
@@ -660,27 +717,33 @@ struct UserAuthenticationDetail {
     username: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[repr(u8)]
+#[derive(Facet)]
 enum Roles {
     Front,
     UX,
     Back,
     Design,
-    #[serde(rename = "Product Owner")]
+    #[facet(rename = "Product Owner")]
     ProductOwner,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 struct UserDetail {
     id: usize,
     username: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Facet)]
 /// <https://docs.taiga.io/api.html#object-project-list-entry>
 struct ProjectListEntry {
     id: usize,
     name: String,
+}
+
+// TODO: Move this to a separate crate
+pub trait ExitOnError<T> {
+    fn or_exit(self) -> T;
 }
 
 impl<T> ExitOnError<T> for Result<T, TaigaAPIError> {
